@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>TRainer - Version Alpha</title>
+        <script src="js/minMatrixb.js" type="text/javascript"></script>
+        <script src="js/shader_utils.js" type="text/javascript"></script>
+        <script src="js/trainer_utils.js" type="text/javascript"></script>
+        <script src="js/script.js" type="text/javascript"></script>
+        <link rel="stylesheet" type="text/css" href="css/style.css" media="all">
+
+        <script id="point_vs" type="x-shader/x-vertex">
+            attribute vec3 position;
+			attribute vec4 color;
+			uniform mat4 mvpMatrix;
+			uniform float pointSize;
+			varying vec4 vColor;
+            
+            void main(){
+				vColor = color;
+				gl_Position = mvpMatrix * vec4(position, 1.0);
+				gl_PointSize = pointSize;
+			}
+        </script>
+        <script id="point_fs" type="x-shader/x-fragment">
+			precision mediump float;
+			varying vec4 vColor;
+            uniform vec2 resolution;
+			uniform float time;
+
+			void main(){
+                float dist = distance(gl_PointCoord, vec2(0.5, 0.5));
+				if(dist < 0.5){
+                    gl_FragColor = vColor;
+                }else{
+                    discard;
+                }
+			}
+		</script>
+        
+<!-- Solid -->
+        <script id="solid_vs" type="x-shader/x-vertex">
+            attribute vec3 position;
+            attribute vec3 normal;
+            attribute vec4 color;
+            uniform mat4 mvpMatrix;
+            varying vec3 vNormal;
+            varying vec4 vColor;
+            varying vec3 vPos;
+
+            void main(){
+                vNormal = normal;
+                vColor = color;
+                vPos = vec3(position.x, -position.z, position.y);
+                gl_Position = mvpMatrix * vec4(position, 1.0);
+                //gl_Position = mvpMatrix * vec4(position.x, position.y + sin(position.x * 0.8), position.z, 1.0);
+            }
+        </script>
+        <script id="solid_fs" type="x-shader/x-fragment">
+            precision mediump float;
+
+            uniform mat4 invMatrix;
+            uniform vec3 lightPosition;
+            uniform vec3 camPosition;
+            uniform vec4 ambientColor;
+            uniform vec2 resolution;
+            uniform float time;
+            varying vec3 vNormal;
+            varying vec4 vColor;
+            varying vec3 vPos;
+
+            void main(){
+                 gl_FragColor = vec4(1.0);
+            }
+        </script>
+
+
+<!-- Wire -->
+       <script id="wire_vs" type="x-shader/x-vertex">
+            attribute vec3 position;
+            attribute vec4 color;
+            attribute float flag;
+            uniform mat4 mvpMatrix;
+            varying vec4 vColor;
+            varying vec3 vPos;
+            varying float vFlag;
+
+
+            void main(){
+                vColor = color;
+                vPos = position;
+                vFlag = flag;
+                gl_Position = mvpMatrix * vec4(position, 1.0);
+                gl_PointSize = 5.0;
+            }
+        </script>
+        <script id="wire_fs" type="x-shader/x-fragment">
+            precision mediump float;
+
+            uniform vec2 resolution;
+            uniform float time;
+            varying vec4 vColor;
+            varying vec3 vPos;
+            varying float vFlag;
+
+            void main(){
+                vec2 mesh_p = vec2(vPos.x * 0.5, -vPos.z * 0.5);
+                if(vFlag < 0.05){ //0.0 Solid
+                    gl_FragColor = vColor;
+                }else if(vFlag < 0.15){ //0.1 Mesh Animate
+                    if(vColor.a < 0.1) discard;
+                    gl_FragColor = vec4(1.0);
+                    //gl_FragColor = vColor + vec4(vec2(abs(sin(vPos.z * 8.0 - time * 2.0) * 0.2) + abs(sin(vPos.x * 8.0 - time * 1.0) * 0.2)) * vec2(0.1, 2.0), abs(sin(vPos.z * 10.0 - time * 2.0) * 0.4) + abs(sin(vPos.x * 10.0 - time * 1.0) * 0.4), 0.0);
+                }else if(vFlag < 0.25){ //0.2 Cursor animate
+                    gl_FragColor = vColor + vec4(vec3(abs(sin(time * 2.0) * 0.5) - 0.45), 0.0);
+                }else if(vFlag < 0.35){ //0.3 line animate
+                    gl_FragColor = vec4(1.0);
+                    //gl_FragColor = vColor + vec4(vec3(abs(sin((gl_FragCoord.y / resolution.y) * 2.0 + time * 2.0) * 0.5)), 0.0);
+                }
+                // gl_FragColor = vColor + vec4(vec2(abs(sin(vPos.z * 10.0 - time * 2.0) * 0.2) + abs(sin(vPos.x * 10.0 - time * 1.0) * 0.2)), abs(sin(vPos.z * 10.0 - time * 2.0) * 0.4) + abs(sin(vPos.x * 10.0 - time * 1.0) * 0.4), 0.0);
+                //gl_FragColor = vColor + vec4(vec3(abs(sin(time * 1.25) * 0.20)), 0.0);
+            }
+        </script>
+
+
+<!-- Mesh -->
+        <script id="mesh_vs" type="x-shader/x-vertex">
+            attribute vec3 position;
+            attribute vec2 textureCoord;
+            attribute vec4 color;
+            uniform mat4 mvpMatrix;
+            varying vec4 vColor;
+            varying vec2 vTex;
+
+            void main(){
+                vColor = color;
+                vTex = textureCoord;
+                gl_Position = mvpMatrix * vec4(position, 1.0);
+            }
+        </script>
+        <script id="mesh_fs" type="x-shader/x-fragment">
+            precision mediump float;
+
+            uniform sampler2D texture;
+            uniform vec2 resolution;
+            uniform float time;
+            varying vec4 vColor;
+            varying vec2 vTex;
+
+            void main(){
+                    vec4 smpColor = texture2D(texture, vTex);
+                    if(smpColor.a < 0.001) discard;
+                    gl_FragColor = vColor * vec4(vec3(1.0), abs(sin(time) * 0.25) + 0.5);
+            }
+        </script>
+
+
+<!-- Mesh Backgorund -->
+        <script id="mesh_bg_vs" type="x-shader/x-vertex">
+            attribute vec3 position;
+            attribute vec2 textureCoord;
+            uniform mat4 mvpMatrix;
+            varying vec2 vTex;
+
+            void main(){
+                vTex = textureCoord;
+                gl_Position = mvpMatrix * vec4(position, 1.0);
+            }
+        </script>
+        <script id="mesh_bg_fs" type="x-shader/x-fragment">
+            precision mediump float;
+
+            uniform float time;
+            uniform vec2 bg_resolution;
+            uniform float type;
+
+            varying vec2 vTex;
+
+
+            float hexGrid(vec2 p){
+                p.x *= 1.1547;
+                p.y += mod(floor(p.x), 2.)*0.5;
+                p = abs((mod(p, 1.0) - 0.5));
+                return abs(max(p.x*1.5 + p.y, p.y*2.0)-1.0);
+            }
+
+            void main(){
+                float aspect = bg_resolution.x / bg_resolution.y;
+                vec2 p = vec2(vTex.x * aspect, vTex.y);
+
+                if(type < 0.05){
+                    float color = hexGrid(p * 12.0 + vec2(time * 0.1, 0.0));
+                    if(color > 0.025) discard;
+                    gl_FragColor = vec4(1.0 - color) * vec4(0.184, 1, 1, abs(sin(time * 0.5)) * 0.075 + 0.025);
+                }
+                else if(type < 0.125){
+                    float color = hexGrid(p * 36.0 + vec2(time * 0.1, 0.0));
+                    if(color > 0.04) discard;
+                    gl_FragColor = vec4(1.0 - color) * vec4(0.184, 0.75, 0.75, abs(sin(time * 0.5)) * 0.05 + 0.025);
+                }
+            }
+        </script>
+
+
+<!-- Gaussian blur -->
+        <script id="gauss_vs" type="x-shader/x-vertex">
+            attribute vec3 position;
+            void main(void){ gl_Position = vec4(position, 1.0); }
+        </script>
+        <script id="gauss_fs" type="x-shader/x-fragment">
+            precision mediump float;
+
+            uniform vec2 resolution;
+            uniform sampler2D frameBuffer;
+            uniform vec2 bufferResolution;
+            uniform bool horizontal;
+            uniform float weight[10];
+
+            void main(){
+                vec2 texCoord = gl_FragCoord.xy / (resolution * (bufferResolution / resolution));
+
+                vec4 destColor = vec4(0.0);
+
+                float strength = 0.75;
+
+
+                if(horizontal){
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(-0.009, 0.0) * strength)) * weight[9];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(-0.008, 0.0) * strength)) * weight[8];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(-0.007, 0.0) * strength)) * weight[7];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(-0.006, 0.0) * strength)) * weight[6];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(-0.005, 0.0) * strength)) * weight[5];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(-0.004, 0.0) * strength)) * weight[4];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(-0.003, 0.0) * strength)) * weight[3];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(-0.002, 0.0) * strength)) * weight[2];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(-0.001, 0.0) * strength)) * weight[1];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2( 0.000, 0.0) * strength)) * weight[0];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2( 0.001, 0.0) * strength)) * weight[1];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2( 0.002, 0.0) * strength)) * weight[2];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2( 0.003, 0.0) * strength)) * weight[3];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2( 0.004, 0.0) * strength)) * weight[4];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2( 0.005, 0.0) * strength)) * weight[5];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2( 0.006, 0.0) * strength)) * weight[6];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2( 0.007, 0.0) * strength)) * weight[7];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2( 0.008, 0.0) * strength)) * weight[8];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2( 0.009, 0.0) * strength)) * weight[9];
+                }else{
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0, -0.009) * strength)) * weight[9];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0, -0.008) * strength)) * weight[8];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0, -0.007) * strength)) * weight[7];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0, -0.006) * strength)) * weight[6];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0, -0.005) * strength)) * weight[5];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0, -0.004) * strength)) * weight[4];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0, -0.003) * strength)) * weight[3];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0, -0.002) * strength)) * weight[2];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0, -0.001) * strength)) * weight[1];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0,  0.000) * strength)) * weight[0];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0,  0.001) * strength)) * weight[1];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0,  0.002) * strength)) * weight[2];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0,  0.003) * strength)) * weight[3];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0,  0.004) * strength)) * weight[4];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0,  0.005) * strength)) * weight[5];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0,  0.006) * strength)) * weight[6];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0,  0.007) * strength)) * weight[7];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0,  0.008) * strength)) * weight[8];
+                    destColor += texture2D(frameBuffer, (texCoord + vec2(0.0,  0.009) * strength)) * weight[9];
+                }
+
+                // gl_FragColor = texture2D(frameBuffer, texCoord) * vec4(1.0, 0.0, 0.0, 1.0);
+                gl_FragColor = destColor;
+            }
+        </script>
+
+
+<!-- Post Effect -->
+        <script id="fx_vs" type="x-shader/x-vertex">
+            attribute vec3 position;
+            void main(void){ gl_Position = vec4(position, 1.0); }
+        </script>
+
+<!--/////////////////////////////////////////////////////////////////////////-->
+        <script id="fx_fs" type="x-shader/x-fragment">
+            precision mediump float;
+
+            uniform float time;
+            uniform vec2 resolution;
+            uniform sampler2D frameBuffer;
+            uniform vec2 bufferResolution;
+            uniform sampler2D backbuffer;
+            uniform sampler2D blurbuffer;
+
+
+            vec3 Hue(float hue){
+                vec3 rgb = fract(hue + vec3(0.0, 2.0 / 3.0, 1.0 / 3.0));
+                rgb = abs(rgb * 2.0 - 1.0);
+                return clamp(rgb * 3.0 - 1.0, 0.0, 1.0);
+            }
+
+
+            void main(){
+                vec2 texCoord = gl_FragCoord.xy / (resolution * (bufferResolution / resolution));
+                vec2 p = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
+                vec4 lastColor = texture2D(backbuffer, texCoord);
+                vec4 destColor = vec4(0.0);
+                vec4 blurColor = vec4(0.0);
+                vec4 bloomColor = vec4(0.0);
+
+                //Background
+                vec3 c = vec3(0.0, 0.243, 0.243) - vec3(length((p - vec2(0.0, -1.0)) * 0.075));
+                destColor = vec4(c, 1.0);
+                blurColor = vec4(c, 1.0);
+                bloomColor = vec4(c, 1.0);
+
+
+                //Set FrameBuffer
+                destColor += texture2D(frameBuffer, texCoord);
+                blurColor += texture2D(blurbuffer, texCoord);
+
+
+                //Bloom
+                bloomColor += blurColor * 2.0;
+                bloomColor *= vec4(clamp(length(p * vec2(0.5625, 1.0) * 0.5), 0.0, 1.0));
+                bloomColor += blurColor * 0.36;
+                destColor  += bloomColor;
+
+
+                // Fake DoF
+                // destColor = mix(destColor,blurColor, clamp(abs(p.y * 1.5), 0.0, 1.0));
+
+
+                //Motion blur
+                destColor = mix(destColor, lastColor, 0.25);
+
+
+                //Color Collection
+                destColor *= vec4(1.0, 1.0, 1.5, 1.0);
+
+
+
+                // gl_FragColor = texture2D(blurbuffer, texCoord);
+                //destColor += texture2D(frameBuffer, texCoord);
+
+                //Vignette effect
+                float amount = 0.65;
+                float size = 0.5;
+                float dist = distance((gl_FragCoord.xy / resolution.xy), vec2(0.5, 0.5));
+                destColor.rgb *= smoothstep(0.8, size * 0.799, dist * (amount + size));
+
+
+
+                gl_FragColor = destColor;
+            }
+        </script>
+<!--/////////////////////////////////////////////////////////////////////////-->
+
+<!-- Render -->
+        <script id="render_vs" type="x-shader/x-vertex">
+            attribute vec3 position;
+            void main(void){ gl_Position = vec4(position, 1.0); }
+        </script>
+        <script id="render_fs" type="x-shader/x-fragment">
+            precision mediump float;
+
+            uniform vec2 resolution;
+            uniform sampler2D frameBuffer;
+            uniform vec2 bufferResolution;
+
+            void main(){
+                vec4 smpColor = texture2D(frameBuffer, gl_FragCoord.xy / (resolution * (bufferResolution / resolution)));
+                gl_FragColor = smpColor;
+            }
+
+        </script>
+    </head>
+    <body>
+        <canvas id="canvas"></canvas>
+        <img id="ss_grad" class="absolute" src="./img/ss_grad.png" width="100%" height="100%">
+        
+        <span id="R_flag" class="absolute">Railway</span>
+        <span id="H_flag" class="absolute">Highway</span>
+        
+        <span id="D1" class="absolute">北千住キャンパス</span>
+        <span id="D2" class="absolute">千葉ニュータウンキャンパス</span>
+        <span id="D3" class="absolute">埼玉鳩山キャンパス</span>
+        
+        <span id="S1" class="absolute">千葉ニュータウン中央駅</span>
+
+        <div>
+            <img id="data_field" class="absolute" src="./img/data_field.png" width="640px">
+            <div id="data_field_longitude" class="absolute">000.000</div>
+            <div id="data_field_latitude" class="absolute">-00.000</div>
+        </div>
+
+
+
+        <div id="debug" class="absolute">
+            <p id="d_title">--+ DEBUG +--</p>
+            <p id="d_resolution">screen=1600x900</p>
+            <p id="d_aspect">aspect=1.778</p>
+            <p id="d_ratio">ratio=1.0</p>
+            <p id="d_fps">fps=0.0</p>
+            <p id="d_ave">average=0.0</p>
+            <p id="d_min">fps min=0.0</p>
+            <p id="d_max">fps max=0.0</p>
+            <p id="d_time">timer=0.000</p>
+            <p>&nbsp;</p>
+            <p id="d_camera_title">--+ CAMERA +--</p>
+            <p id="d_camera">camera=[0.000, 0.000, 0.000]</p>
+            <p id="d_lookat">lookat=[0.000, 0.000, 0.000]</p>
+            <p id="d_camup">camup =[0.000, 0.000, 0.000]</p>
+        </div>
+
+    </body>
+</html>

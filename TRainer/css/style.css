@@ -1,0 +1,139 @@
+*{
+    margin: 0;
+    padding: 0;
+/*     overflow: hidden;
+    height: 100%; */
+    cursor: default;
+}
+
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    color: #e5e5e5;
+    background-color: #000000;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    margin: 0 0 0 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    /* position: relative; */
+}
+
+h1 {
+    font-size: 36px;
+}
+
+.absolute{
+    position: absolute;
+}
+
+#ss_grad{
+    pointer-events: none;
+    left: 0px;
+    top: 0px;
+}
+
+#data_field{
+    pointer-events: none;
+    right: 0px;
+    bottom: 0px;
+}
+
+#data_field_longitude{
+    pointer-events: none;
+    font-family: "Andale Mono", monospace;
+    font-style: italic;
+    font-size: 56px;
+    font-weight: 900;
+    color: #2fffff;
+    right: 360px;
+    bottom: 40px;
+}
+
+#data_field_latitude{
+    pointer-events: none;
+    font-family: "Andale Mono", monospace;
+    font-style: italic;
+    font-size: 56px;
+    font-weight: 900;
+    color: #2fffff;
+    right: 40px;
+    bottom: 40px;
+}
+
+
+#debug{
+    visibility: hidden;
+    pointer-events: none;
+    font-family: "Andale Mono", monospace;
+    font-weight: 900;
+    color: #e5e5e5;
+    /* color: #7d7d7d; */
+    font-size: 15px;
+    left: 5px;
+    bottom: 5px;
+    /* text-shadow: 0px 0px 3px #4D8080; */
+    text-shadow:1px 1px 4px #4D8080,
+    -1px 1px 4px #4D8080,
+    1px -1px 4px #4D8080,
+    -1px -1px 4px #4D8080;
+}
+
+#R_flag{
+    font-size: 15px;
+    left: 5px;
+    top: 10px;
+}
+
+#H_flag{
+    font-size: 15px;
+    left: 80px;
+    top: 10px;
+}
+
+#D1{
+    font-size: 15px;
+    left: 155px;
+    top: 10px;
+    color:darkorange;
+}
+
+#D2{
+    font-size: 15px;
+    left: 290px;
+    top: 10px;
+    color:cyan;
+}
+
+#D3{
+    font-size: 15px;
+    left: 500px;
+    top: 10px;
+    color:chartreuse;
+}
+
+#S1{
+    font-size: 15px;
+    left: 650px;
+    top: 10px;
+    color:hotpink;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
