@@ -1,6 +1,7 @@
 #TRainer
 ===
 TrainViewer
+このアプリケーションはFirefox, MacOS推奨環境です。
 
 style.css
 書式設定
