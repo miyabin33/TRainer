@@ -396,23 +396,6 @@ function Hdata_parser(file){
     return {i : id, p : pos, c : col, a : anim};
 }
 
-function tducoord(wblue, orange, ygreen){
-    var pos = new Array(), col = new Array(), ani = new Array();
-    
-    pos.push(parseFloat(140.107883), parseFloat(35.796609), 0.01);
-    pos.push(parseFloat(139.806125), parseFloat(35.748079), 0.01);
-    pos.push(parseFloat(139.366246), parseFloat(35.981819), 0.01);
-    col.push(wblue[0], wblue[1], wblue[2], wblue[3]);
-    col.push(orange[0], orange[1], orange[2], orange[3]);
-    col.push(ygreen[0], ygreen[1], ygreen[2], ygreen[3]);
-    ani.push(0.0);
-    
-    pos.push(parseFloat(140.116274), parseFloat(35.800133), 0.01);
-    col.push(1.0, 0.3, 0.3, 1.0);
-    ani.push(0.0);
-    
-    return{p : pos, c : col, a : ani};
-}
 
 
 

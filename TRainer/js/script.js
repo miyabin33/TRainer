@@ -346,25 +346,6 @@ onload = function(){
         R_flag = false;
         H_flag = true;
     }
-    
-    document.getElementById("D1").onclick = function(e){
-        window.open("https://www.dendai.ac.jp/about/tdu/campus/tokyo_senju.html");
-    }
-    document.getElementById("D2").onclick = function(e){
-        window.open("http://www.sie.dendai.ac.jp/index.html");
-    }
-    document.getElementById("D3").onclick = function(e){
-        window.open("https://www.dendai.ac.jp/about/tdu/campus/saitama_hatoyama.html");
-    }
-    
-    document.getElementById("S1").onclick = function(e){
-        window.open("http://hokuso.ekitan.com/jp/pc/T5?USR=PC&dw=0&slCode=200-12&d=1");
-        window.open("http://hokuso.ekitan.com/jp/pc/T5?USR=PC&dw=0&slCode=200-12&d=2");
-        window.open("http://hokuso.ekitan.com/jp/pc/T5?USR=PC&dw=1&slCode=200-12&d=1");
-        window.open("http://hokuso.ekitan.com/jp/pc/T5?USR=PC&dw=1&slCode=200-12&d=2");
-    }
-    
-    
 
     function create_texture(source, number){
         var img = new Image();
@@ -576,11 +557,6 @@ onload = function(){
     var GMTLineAnim = create_vbo(gl, GMTLine.a);
     var GMTLineVBOList = [GMTLinePosition, GMTLineColor, GMTLineAnim];
 
-    var tdu = tducoord(wblue, orange, ygreen);
-    var tduPosition = create_vbo(gl, tdu.p);
-    var tduColor = create_vbo(gl, tdu.c);
-    var tduVBOList = [tduPosition, tduColor];
-
 
     // 路線図のデータ解析
     var dataLine = Tdata_parser('data/N02-15.xml');
@@ -607,7 +583,7 @@ onload = function(){
     var dataRoadAnim = create_vbo(gl, dataRoad.a);
     var dataRoadVBOList = [dataRoadPosition, dataRoadColor, dataRoadAnim];
     
-    console.log(dataRoad);
+    //console.log(dataRoad);
 
     
     
@@ -705,15 +681,6 @@ onload = function(){
         gl.uniform2f(wire_uniL[1], c.width, c.height);
         gl.uniform1f(wire_uniL[2], time);
         gl.drawArrays(gl.LINE_STRIP, 0, GMTLine.p.length / 3);
-        
-        //TDU
-        gl.useProgram(point_prg);
-        set_attribute(gl, tduVBOList, point_attL, point_attS);
-        gl.uniformMatrix4fv(point_uniL[0], false, mvpMatrix);
-        gl.uniform2f(point_uniL[1], c.width, c.height);
-        gl.uniform1f(point_uniL[2], 12.0);
-        gl.uniform1f(point_uniL[3], time);
-        gl.drawArrays(gl.POINTS, 0, tdu.p.length / 3);
 
 
         // 路線図
